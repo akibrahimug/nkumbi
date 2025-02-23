@@ -74,6 +74,7 @@
     "react-hook-form": "latest",
     "react-intersection-observer": "latest",
     "react-leaflet": "latest",
+    "react-markdown": "^10.0.0",
     "react-redux": "^9.2.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",

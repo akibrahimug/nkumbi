@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HfInference } from "@huggingface/inference";
 
-// Initialize the Hugging Face Inference client with your API token.
 const hf = new HfInference(process.env.HUGGINGFACE_API_TOKEN || "");
 
 export async function POST(req: NextRequest) {
-  console.log("API route hit: /api/chat");
-
   try {
     if (!process.env.HUGGINGFACE_API_TOKEN) {
       console.error("HUGGINGFACE_API_TOKEN is not configured");
@@ -14,7 +11,6 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log("Received request body:", body);
 
     const prompt: string | undefined = body.prompt || body.inputs;
     if (!prompt) {
@@ -25,8 +21,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Format the prompt in Llama 2's preferred chat format
-    const formattedPrompt = `<s>[INST] You are a farming expert. Please provide a detailed and helpful answer to this farming question: ${prompt} [/INST]</s>`;
+    // Check if the input is a greeting
+    const isGreeting = (input: string) => {
+      const greetings = ["hello", "hi", "hey"];
+      return greetings.some((greet) => input.toLowerCase().includes(greet));
+    };
+
+    const formattedPrompt = `<s>[INST]
+You are a Ugandan organic farming expert. Please provide very detailed answer formatted exclusively as valid HTML with inline CSS that replicates ChatGPT's design. 
+The HTML should include a container element with a heading, paragraphs, proper spacing, indentation, line breaks, line height, color, font-family, font-size, font-weight.
+
+IMPORTANT: Keep the response similar to the following format:
+
+-   <div style="font-family: Arial, sans-serif; padding: 16px;">
+-     <h3 style="color: #333333; font-size: 16px; font-weight: bold; margin-bottom: 10px;">Your title:</h3>
+-     <p style="color: #555555; font-size: 16px;">Your detailed answer here...</p>
+-   </div>
+
+Question: ${prompt}
+[/INST]</s>`;
 
     try {
       const result = await hf.textGeneration({
@@ -45,30 +58,24 @@ export async function POST(req: NextRequest) {
       if (!result || !result.generated_text) {
         throw new Error("No response generated from the model");
       }
+      // console.log("result", result.generated_text);
+      let cleanedResponse = result.generated_text.replace(
+        /<s>|<\/s>|\[INST\]|\[\/INST\]/g,
+        ""
+      );
+      // use  a regex to remove everything before the :
+      cleanedResponse = cleanedResponse.replace(/^.*:/, "");
 
-      // Clean up the response
-      let cleanedResponse = result.generated_text
-        .replace(/\[\/INST\]|\[INST\]|<s>|<\/s>/g, "") // Remove Llama 2 formatting tokens
-        .trim();
-
-      // Post-process the response
+      // Fallback in case the response is empty
       if (cleanedResponse.length === 0) {
         cleanedResponse =
           "I apologize, but I couldn't generate a clear response. Please try rephrasing your question about farming.";
       }
-
-      // Ensure the response is properly formatted
-      cleanedResponse = cleanedResponse
-        .replace(/\s+/g, " ") // Replace multiple spaces with single space
-        .trim();
-
-      if (!cleanedResponse.endsWith(".")) {
-        cleanedResponse += ".";
-      }
-
       return NextResponse.json({
         result: {
-          generated_text: cleanedResponse,
+          generated_text: isGreeting(prompt)
+            ? "<div style='font-family: Arial, sans-serif; padding: 16px;'><p style='color: #555555; font-size: 16px;'>Hi, I am Nkumbi Farmers's Assistant. How can I assist you today?</p></div>"
+            : cleanedResponse,
         },
       });
     } catch (modelError: any) {

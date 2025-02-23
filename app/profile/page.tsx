@@ -71,27 +71,33 @@ export default function ProfilePage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
             <Image
-              src={profileData.avatar}
-              alt={profileData.name}
+              src={profileData?.avatar || "/placeholder.svg"}
+              alt={profileData?.name || "Guest User"}
               width={200}
               height={200}
               className="rounded-full"
             />
             <div>
-              <h2 className="text-2xl font-bold mb-2">{profileData.name}</h2>
-              <p className="text-gray-600 mb-1">{profileData.email}</p>
-              <p className="text-gray-600 mb-1">{profileData.location}</p>
+              <h2 className="text-2xl font-bold mb-2">
+                {profileData?.name || "Guest User"}
+              </h2>
+              <p className="text-gray-600 mb-1">
+                {profileData?.email || "guest@example.com"}
+              </p>
+              <p className="text-gray-600 mb-1">
+                {profileData?.location || "Earth"}
+              </p>
               <p className="text-gray-600 mb-4">
-                Joined: {profileData.joinDate}
+                Joined: {profileData?.joinDate || "N/A"}
               </p>
               <div className="flex space-x-4">
                 <div className="flex items-center">
                   <ShoppingBag className="w-5 h-5 mr-1 text-[#2C5F2D]" />
-                  <span>{profileData.listingsCount} listings</span>
+                  <span>{profileData?.listingsCount || 0} listings</span>
                 </div>
                 <div className="flex items-center">
                   <MessageSquare className="w-5 h-5 mr-1 text-[#2C5F2D]" />
-                  <span>{profileData.postsCount} posts</span>
+                  <span>{profileData?.postsCount || 0} posts</span>
                 </div>
               </div>
             </div>
